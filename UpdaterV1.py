@@ -42,7 +42,6 @@ chamberList = {
     "12": "UHAST 5",
     "13": "TC2",
     "14": "TC 3"
-
 }
 
 pprint.pprint(chamberList)
