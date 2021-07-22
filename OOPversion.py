@@ -1,4 +1,5 @@
 from calendar import c
+from re import U
 import openpyxl as opx
 import pprint
 import datetime
@@ -25,16 +26,16 @@ class GetDataFromUser:
     dataList = []
 
     def getVariables():
-        userLotNumber = q.text('Enter the Lot number: ')
-        userPartNumber = q.text('Enter the part number: ')
-        userNumOfLots = q.text('Enter the number of lots: ')
-        userQuantity = q.text('Enter the quantity: ')
-        userStartTime = q.text('Enter the starting time: ')
-        userLotOwner = q.text('Enter the owner: ')
-        userDateInput = q.text("Enter your start date (YYYY-MM-DD) or enter 't' to use today's date: ")
+        userLotNumber = input('Enter the Lot number: ')
+        userPartNumber = input('Enter the part number: ')
+        userNumOfLots = input('Enter the number of lots: ')
+        userQuantity = input('Enter the quantity: ')
+        userStartTime = input('Enter the starting time: ')
+        userLotOwner = input('Enter the owner: ')
+        userDateInput = input("Enter your start date (YYYY-MM-DD) or enter 't' to use today's date: ")
         if userDateInput == 't':
             userDateInput = str(datetime.date.today())
-        userTimeIntervalInput = q.text('enter your time interval: ')
+        userTimeIntervalInput = input('enter your time interval: ')
 
         varList = [userLotNumber, #(project) 
                    userPartNumber, #(product)
@@ -46,8 +47,7 @@ class GetDataFromUser:
                    userTimeIntervalInput]
 
         for var in varList:
-            item = var.ask()
-            GetDataFromUser.dataList.append(item)
+            GetDataFromUser.dataList.append(var)
 
     def storeData():
         """Stores the data input by the user into a list (dataList)"""
@@ -60,8 +60,7 @@ class GetDataFromUser:
             hours=int(GetDataFromUser.dataList[-1])) # I don't know how to access the userTimeIntervalInput variable from the local
                                                      # scope of the function getVariables(). My workaround is to access it by slicing
                                                      # out of the list I created in the for loop at the end of getVariables()
-        parsedUserDateInput = parser.parse(
-            GetDataFromUser.dataList[4]).date() # Same as above, the item at dataList[4] is the user's input date. 
+        parsedUserDateInput = parser.parse(GetDataFromUser.dataList[4]).date() # Same as above, the item at dataList[4] is the user's input date. 
         future = parsedUserDateInput + userTimeIntervalDelta #takes the user's date and time interval, adds them together
         parsedFutureDate = datetime.datetime.strftime(future, "%Y-%m-%d")#converts the future date into datetime format
         parsedUserDateInputDay = datetime.datetime.strftime(
@@ -71,19 +70,10 @@ class GetDataFromUser:
         GetDataFromUser.dataList.insert(5, f"{parsedFutureDate} ({parsedFutureDay})") #adds the future date and day of the week to the dataList
         return f"{parsedFutureDate}" + f" {parsedFutureDay}"
 
-    def dataSummary():
-        """Gives the user a summary of the data they have enterd"""
-        print(
-            f"\nHere is a summary of the data you have entered \n{[i for i in GetDataFromUser.dataList]}")
-
     def doAllFunctions():
         GetDataFromUser.getVariables()
         GetDataFromUser.storeData()
-        GetDataFromUser.computeDate(GetDataFromUser.dataList[6])
-        # GetDataFromUser.dataSummary()
-
-
-# GetDataFromUser.doAllFunctions()
+        GetDataFromUser.computeDate(GetDataFromUser.dataList[4])
 
 
 class updateSpreadSheet:
@@ -111,7 +101,6 @@ class updateSpreadSheet:
         "TC.4_D"
                         ]
 
-
     def pickChamber():
 
         chamberDict = {k: v for k, v in enumerate(updateSpreadSheet.chamberList)} # I used enumerate in case I want to add or subtract chambers in the future.
@@ -134,8 +123,6 @@ class updateSpreadSheet:
 
 
 class confirmUpdateSpreadsheet:
-
- 
 
     def confirmUpdate():
         CHOICES = ['Update my spreadsheet and quit', 'Update my spreadsheet and add more parts', 'Quit']
@@ -160,18 +147,19 @@ class confirmUpdateSpreadsheet:
                 sys.exit()
 
 class OpeningScreen:
+
     def opening():
         while True:
             openingScreen = input("""
-        ##############################
-        UPDATER
-        Version 1.0
-        by Victor Delgado
-        ---------
-        Press 'u' to use the updater
-        Press 'd' to use the date calculator
-        Press 'q' to quit
-        ##############################
+                #############################################################
+                                    UPDATER
+                                    Version 1.0
+                                    by Victor Delgado
+                                    ---------
+                                    Press 'u' to use the updater
+                                    Press 'd' to use the date calculator
+                                    Press 'q' to quit
+                ##############################################################
         """)
             if openingScreen == 'u':
                 break
