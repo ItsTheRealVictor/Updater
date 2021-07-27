@@ -30,11 +30,11 @@ class GetDataFromUser:
         userPartNumber = input('Enter the part number: ')
         userNumOfLots = input('Enter the number of lots: ')
         userQuantity = input('Enter the quantity: ')
-        userStartTime = input('Enter the starting time: ')
+        userStartTime = input('Enter the starting time (HH:MM): ')
         userLotOwner = input('Enter the owner: ')
-        userDateInput = input("Enter your start date (YYYY-MM-DD) or enter 't' to use today's date: ")
+        userDateInput = input("Enter your start date(YYYY-MM-DD) or enter 't' to use today's date: ")
         if userDateInput == 't':
-            userDateInput = str(datetime.date.today())
+            userDateInput = (str(datetime.date.today()))
         userTimeIntervalInput = input('enter your time interval: ')
 
         varList = [userLotNumber, #(project) 
@@ -67,8 +67,8 @@ class GetDataFromUser:
             parsedUserDateInput, "%A")
         parsedFutureDay = datetime.datetime.strftime(future, "%A") #takes the future date from parsedFutureDate and computes the day 
                                                                    #of the week
-        GetDataFromUser.dataList.insert(5, f"{parsedFutureDate} ({parsedFutureDay})") #adds the future date and day of the week to the dataList
-        return f"{parsedFutureDate}" + f" {parsedFutureDay}"
+        GetDataFromUser.dataList.insert(5, f"{parsedFutureDate}") #adds the future date and day of the week to the dataList
+        return f"{parsedFutureDate}"
 
     def doAllFunctions():
         GetDataFromUser.getVariables()
@@ -111,6 +111,12 @@ class updateSpreadSheet:
             if userChamberSelection == k:
                 updateSpreadSheet.chamberChoice = f"{v}"
 
+
+
+        progBarFormulaCombinedDateTimeIn = r"""=TEXT(F3,"m/dd/yy ")&TEXT(H3,"HH:MM")"""
+        progBarFormulaCombinedDateTimeOut = r"""=TEXT(G3,"m/dd/yy ")&TEXT(H3,"HH:MM")"""
+        progBarFormulaRemainingTime = r"""=M3 - $O$1"""
+        progBarFormulaRemainingTimePercentage = r"""=(M3-$O$1)/(M3-L3)"""
         inputDataList = [i for i in GetDataFromUser.dataList]
         inputDataList.insert(0, "")
         inputDataList.insert(1, "")
@@ -121,6 +127,22 @@ class updateSpreadSheet:
                 for i in range(2, 10):
                     cellref = wb[sheetsList[index]].cell(row=3, column=i)
                     cellref.value = inputDataList[i]
+                for j in range(12,13):
+                    progBarInsertOne = wb[sheetsList[index]].cell(row=3, column=j)
+                    progBarInsertOne.value = progBarFormulaCombinedDateTimeIn
+                for k in range(13,14):
+                    progBarInsertTwo = wb[sheetsList[index]].cell(row=3, column=k)
+                    progBarInsertTwo.value = progBarFormulaCombinedDateTimeOut
+                for g in range(14,15):
+                    progBarInsertThree = wb[sheetsList[index]].cell(row=3, column=g)
+                    progBarInsertThree.value = progBarFormulaRemainingTime
+                for l in range(15,16):
+                    progBarInsertFour = wb[sheetsList[index]].cell(row=3, column=l)
+                    progBarInsertFour.value = progBarFormulaRemainingTimePercentage
+                    progBarInsertFour.style = "Percent"
+        #Need to add a function or otherwise better way (i.e. non-code repeating) progress dashboard functionality.
+        #This works for now but needs to be changed later
+
 
 
 class confirmUpdateSpreadsheet:
@@ -167,7 +189,7 @@ class OpeningScreen:
             elif openingScreen == 'd':
                 startDate = input("Enter your start date (YYYY-MM-DD) or enter 't' to use today's date: ")
                 if startDate == 't':
-                    startDate = str(datetime.date.today())
+                        startDate = str(datetime.date.today())
                 userTime = input("Enter your time interval (in hours): ")
 
                 """Takes the date and time interval from the user and computes the future date and day. """
