@@ -4,7 +4,7 @@ from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Fo
 
 wb = opx.Workbook()
 refWB = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsage.xlsx", data_only=True) #reference workbook, where data is pulled
-refSheets = refWB.worksheets[1:15] #indices of the various chamber-specific sheets
+refSheets = refWB.worksheets[0:14] #indices of the various chamber-specific sheets
 activeSheet = wb.active
 activeSheet.title = "Dashboard"
 
@@ -35,20 +35,20 @@ activeSheet.column_dimensions['D'].width = 20
 currentProgress = activeSheet['C3']
 currentProgress.value = "Lots currently in progress: "
 currentProgress.fill = darkOrangeColor
-for cell in activeSheet.iter_rows(min_row=4, max_row=16, min_col=3, max_col=3):
+for cell in activeSheet.iter_rows(min_row=4, max_row=17, min_col=3, max_col=3):
     cell[0].fill = lightOrangeColor
 
 #Total number of units in chambers
 totalUnits = activeSheet['D3']
 totalUnits.value = "Total units in progress"
 totalUnits.fill = blueColor
-for cell in activeSheet.iter_rows(min_row=4, max_row=16, min_col=4, max_col=4):
+for cell in activeSheet.iter_rows(min_row=4, max_row=17, min_col=4, max_col=4):
     cell[0].fill = lightBlueColor
 
 #Lot Progress
 lotProgress = activeSheet['F2']
 lotProgress.value = "Lot Progress"
-lotProgressRefs = [chr(i) for i in range(ord('g'),ord('s')+1)]
+lotProgressRefs = [chr(i) for i in range(ord('g'),ord('t')+1)]
 for index, cell in enumerate(lotProgressRefs):
     activeSheet[f'{cell}3'] = refSheets[index].title
     activeSheet[f'{cell}3'].alignment = Alignment(wrap_text=True)
@@ -56,7 +56,7 @@ for index, cell in enumerate(lotProgressRefs):
 
 
 #Chamber Cells
-chamberCellRefs = [(f"B{i}") for i in range(4, 17)]
+chamberCellRefs = [(f"B{i}") for i in range(4, 18)]
 for index, cell in enumerate(chamberCellRefs):
     activeSheet[f'{cell}'] = refSheets[index].title
     activeSheet[f'{cell}'].fill = greenColor
