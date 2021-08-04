@@ -2,12 +2,14 @@
 import openpyxl as opx
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
 from collections import defaultdict
-import itertools
+import pprint as p
+import datetime as dt
+import pandas as pd
 
 wb = opx.Workbook()
 # reference workbook, where data is pulled
 refWB = opx.load_workbook(
-    r"C:\Users\valex\Desktop\VictorChamberUsage.xlsx", data_only=True)
+    r"C:\Users\VD102541\Desktop\VictorChamberUsage.xlsx", data_only=True)
 # indices of the various chamber-specific sheets
 refSheets = refWB.worksheets[1:15]
 activeSheet = wb.active
@@ -15,18 +17,13 @@ activeSheet.title = "Dashboard"
 
 
 #color pallete templates, for changing cell colors
-darkOrangeColor = PatternFill(
-    patternType='solid', start_color='F6C010', end_color='FF5833')
-lightOrangeColor = PatternFill(
-    patternType='solid', start_color='FFE262', end_color='FFE262')
-greenColor = PatternFill(
-    patternType='solid', start_color='43B854', end_color='43B854')
-lightGreenColor = PatternFill(
-    patternType='solid', start_color='76FF91', end_color='76FF91')
-blueColor = PatternFill(patternType='solid',
-                        start_color='5A63FF', end_color='5A63FF')
-lightBlueColor = PatternFill(
-    patternType='solid', start_color='AEC1FF', end_color='AEC1FF')
+darkRedColor = PatternFill(patternType='solid', start_color='DE3163', end_color='DE3163')
+darkOrangeColor = PatternFill(patternType='solid', start_color='F6C010', end_color='FF5833')
+lightOrangeColor = PatternFill(patternType='solid', start_color='FFE262', end_color='FFE262')
+greenColor = PatternFill(patternType='solid', start_color='43B854', end_color='43B854')
+lightGreenColor = PatternFill(patternType='solid', start_color='76FF91', end_color='76FF91')
+blueColor = PatternFill(patternType='solid', start_color='5A63FF', end_color='5A63FF')
+lightBlueColor = PatternFill(patternType='solid', start_color='AEC1FF', end_color='AEC1FF')
 
 
 #Cell with Today's Date
@@ -39,6 +36,7 @@ activeSheet['B1'].number_format = "MM/DD/YYYY"
 activeSheet.column_dimensions['B'].width = 15
 activeSheet.column_dimensions['C'].width = 25
 activeSheet.column_dimensions['D'].width = 20
+activeSheet.column_dimensions['F'].width = 25
 
 
 #Title cell
@@ -56,12 +54,14 @@ for cell in activeSheet.iter_rows(min_row=4, max_row=17, min_col=4, max_col=4):
     cell[0].fill = lightBlueColor
 
 #Lot Progress
-lotProgress = activeSheet['F2']
+lotProgress = activeSheet['F3']
 lotProgress.value = "Lot Progress"
-lotProgressRefs = [chr(i) for i in range(ord('g'), ord('t')+1)]
+lotProgress.fill = darkRedColor
+lotProgress.font = Font(color="FDFEFE")
+lotProgressRefs = [f"F{i}" for i in range(4, 18)]
 for index, cell in enumerate(lotProgressRefs):
-    activeSheet[f'{cell}3'] = refSheets[index].title
-    activeSheet[f'{cell}3'].alignment = Alignment(wrap_text=True)
+    activeSheet[f'{cell}'] = refSheets[index].title
+    activeSheet[f'{cell}'].alignment = Alignment(wrap_text=True)
 
 
 #Chamber Cells
@@ -78,66 +78,48 @@ activeSheet['C4'].value = lots125CBake
 
 #EXPERIMENTAL CODE
 
-def getLotNums(sheetIndex, columnIndex):
+def getData(sheetIndex, columnIndex):
 
     """Takes the integer index of the sheet (from the list refSheets) as the first argument, the column index (as a letter) for the
        second argument"""
 
-    chamberLotNumList = list()
+    dataList = list()
     for row in range(3, refSheets[sheetIndex].max_row):
         for column in columnIndex:
             cellname = f'{column}{row}'
             cellValue = refSheets[sheetIndex][f'{cellname}'].value
             if cellValue is not None:
-                chamberLotNumList.append((cellValue))
-    return(chamberLotNumList)
+                dataList.append((cellValue))
+    return(dataList)
 
+chamberDict = defaultdict(list) #initiates the dictionary which will hold all of our dynamic dashboard data. The keys
+                                #are chambers, the values will be lists containing data from columns B(lot number),
+                                #M(removal date/time), N(time until removal) and O(percentage time remaining)
 
-
-
-
-
-# #I've been stuck for a days on this so I'm resorting to a brute force way of solving this. I
-# #  want a list for each chamber, each list being the contents of row B from that chamber's sheet.
-# #It's ugly as hell but it works.
-# bake125ClotNames = getLotNums(1, "B")
-# # bake150CLotNames = getLotNums(1, "B")
-# # bake180CLotNames = getLotNums(2, "B")
-# # bake210CLotNames = getLotNums(3, "B")
-# # soak3060LotNames = getLotNums(4, "B")
-# # soak6060LotNames = getLotNums(5, "B")
-# # soak8585LotNames = getLotNums(6, "B")
-# # coldOven8LotNames = getLotNums(7, "B")
-# # uHast1LotNames = getLotNums(8, "B")
-# # uHast2LotNames = getLotNums(9, "B")
-# # uHast3LotNames = getLotNums(10, "B")
-# # uHast5LotNames = getLotNums(11, "B")
-# # TC2LotNames = getLotNums(12, "B")
-# # TC3LotNames = getLotNums(13, "B")
-# # # TC4LotNames = getLotNums(14)
-
-
-chamberDict = defaultdict(list)
-for sheet in refSheets:
+for sheet in refSheets:    #Establishes chambers (i.e. titles of the worksheets) as dictionary keys
     chamberDict[f'{sheet.title}']
 
-#This initializes a dictionary with the chamber names as keys. The values will be the lists generated by the function getLotNums().
-# This function will be renamed later, it really truly acts as a way to get, from all sheets, the row values from a specific column. The dashboard
-    #will show the information from
-    #column B(2), the lot number
-    #column M(13), the date/time of removal
-    #column N(14), the time until removal
-    #column O(15), the percentage of time remaining (0% means done)
-
-#
-chamberDict['125C Bake'] = getLotNums(0, "B")
-
-print(chamberDict)
+for index, sheet in enumerate(refSheets): #Gathers the lists of and puts it into the dictionary
+    chamberDict[f'{sheet.title}'].append(getData(index, "B")) #Lot Nums (i.e. RA numbers)
+    chamberDict[f'{sheet.title}'].append(getData(index, "L")) #Date/time in
+    chamberDict[f'{sheet.title}'].append(getData(index, "M")) #Removal date
+    chamberDict[f'{sheet.title}'].append(getData(index, "N")) #Time until removal
+    chamberDict[f'{sheet.title}'].append(getData(index, "O")) # % of time remaining
 
 
+for sheet in refSheets:
+    (chamberDict[f'{sheet.title}'][-1]) = [ f'{round(x * 100, 1)}%' for x in (chamberDict[f'{sheet.title}'][-1])]
 
-wb.save(r"C:\Users\valex\Desktop\DashboardTest.xlsx")
+zippedData = zip(chamberDict['125C Bake'])
+
+#I'm thinking to make a pandas dataframe with the data from the dictionary. Columns will be part number, date/time in, 
+# date/time out, remaining time, and % time remaining. Each chamber will have it's own dataframe? That might work. 
 
 
+
+
+
+
+wb.save(r"C:\Users\VD102541\Desktop\DashboardTest.xlsx")
 
 
