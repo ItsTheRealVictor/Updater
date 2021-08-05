@@ -115,6 +115,15 @@ zippedData = zip(chamberDict['125C Bake'])
 #I'm thinking to make a pandas dataframe with the data from the dictionary. Columns will be part number, date/time in, 
 # date/time out, remaining time, and % time remaining. Each chamber will have it's own dataframe? That might work. 
 
+columnList = ["RA Number", "Date/Time in", "Removal Date/Time", "Time Until Removal", r"% of time remaining"]
+df = pd.DataFrame([chamberDict['125C Bake'][i] for i in range(0, 5)], index=columnList)
+
+# this kind of does what I want, the output is transposed though. I want 5 columns of 8 rows instead of 5 rows of 8 columns. 
+# I still need to  -
+                        # figure out how to transpose this to the dimensions I want
+                        # Write a function which makes a dataframe out of each key/lists pair in the chamberDict dictionary
+                        # Figure out how to insert those dataframes into the corresponding spots in the dashboardSheet
+
 
 
 
