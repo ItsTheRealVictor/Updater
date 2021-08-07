@@ -1,6 +1,7 @@
 
 import openpyxl as opx
 from openpyxl.styles import PatternFill, Border, Side, Alignment, Protection, Font
+from openpyxl.utils.dataframe import dataframe_to_rows
 from collections import defaultdict
 import pprint as p
 import datetime as dt
@@ -8,7 +9,8 @@ import pandas as pd
 
 wb = opx.Workbook()
 # reference workbook, where data is pulled
-refWB = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsage.xlsx", data_only=True)
+refWB = opx.load_workbook(
+    r"C:\Users\valex\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True)
 # indices of the various chamber-specific sheets
 refSheets = refWB.worksheets[0:14]
 activeSheet = wb.active
@@ -16,13 +18,20 @@ activeSheet.title = "Dashboard"
 
 
 #color pallete templates, for changing cell colors
-darkRedColor = PatternFill(patternType='solid', start_color='DE3163', end_color='DE3163')
-darkOrangeColor = PatternFill(patternType='solid', start_color='F6C010', end_color='FF5833')
-lightOrangeColor = PatternFill(patternType='solid', start_color='FFE262', end_color='FFE262')
-greenColor = PatternFill(patternType='solid', start_color='43B854', end_color='43B854')
-lightGreenColor = PatternFill(patternType='solid', start_color='76FF91', end_color='76FF91')
-blueColor = PatternFill(patternType='solid', start_color='5A63FF', end_color='5A63FF')
-lightBlueColor = PatternFill(patternType='solid', start_color='AEC1FF', end_color='AEC1FF')
+darkRedColor = PatternFill(
+    patternType='solid', start_color='DE3163', end_color='DE3163')
+darkOrangeColor = PatternFill(
+    patternType='solid', start_color='F6C010', end_color='FF5833')
+lightOrangeColor = PatternFill(
+    patternType='solid', start_color='FFE262', end_color='FFE262')
+greenColor = PatternFill(
+    patternType='solid', start_color='43B854', end_color='43B854')
+lightGreenColor = PatternFill(
+    patternType='solid', start_color='76FF91', end_color='76FF91')
+blueColor = PatternFill(patternType='solid',
+                        start_color='5A63FF', end_color='5A63FF')
+lightBlueColor = PatternFill(
+    patternType='solid', start_color='AEC1FF', end_color='AEC1FF')
 
 
 #Cell with Today's Date
@@ -32,6 +41,7 @@ activeSheet['B1'] = "=NOW()"
 activeSheet['B1'].number_format = "MM/DD/YYYY"
 
 #column widths
+activeSheet.column_dimensions['A'].width = 25
 activeSheet.column_dimensions['B'].width = 15
 activeSheet.column_dimensions['C'].width = 25
 activeSheet.column_dimensions['D'].width = 20
@@ -52,15 +62,6 @@ totalUnits.fill = blueColor
 for cell in activeSheet.iter_rows(min_row=4, max_row=17, min_col=4, max_col=4):
     cell[0].fill = lightBlueColor
 
-#Lot Progress
-lotProgress = activeSheet['F3']
-lotProgress.value = "Lot Progress"
-lotProgress.fill = darkRedColor
-lotProgress.font = Font(color="FDFEFE")
-lotProgressRefs = [f"F{i}" for i in range(4, 18)]
-for index, cell in enumerate(lotProgressRefs):
-    activeSheet[f'{cell}'] = refSheets[index].title
-    activeSheet[f'{cell}'].alignment = Alignment(wrap_text=True)
 
 
 #Chamber Cells
@@ -78,7 +79,6 @@ activeSheet['C4'].value = lots125CBake
 #EXPERIMENTAL CODE
 
 def getData(sheetIndex, columnIndex):
-
     """Takes the integer index of the sheet (from the list refSheets) as the first argument, the column index (as a letter) for the
        second argument"""
 
@@ -91,27 +91,36 @@ def getData(sheetIndex, columnIndex):
                 dataList.append((cellValue))
     return(dataList)
 
-chamberDict = defaultdict(list) #initiates the dictionary which will hold all of our dynamic dashboard data. The keys
-                                #are chambers, the values will be lists containing data from columns B(lot number),
-                                #M(removal date/time), N(time until removal) and O(percentage time remaining)
 
-for sheet in refSheets:    #Establishes chambers (i.e. titles of the worksheets) as dictionary keys
+# initiates the dictionary which will hold all of our dynamic dashboard data. The keys
+chamberDict = defaultdict(list)
+#are chambers, the values will be lists containing data from columns B(lot number),
+#M(removal date/time), N(time until removal) and O(percentage time remaining)
+
+# Establishes chambers (i.e. titles of the worksheets) as dictionary keys
+for sheet in refSheets:
     chamberDict[f'{sheet.title}']
 
-for index, sheet in enumerate(refSheets): #Gathers the lists of and puts it into the dictionary
-    chamberDict[f'{sheet.title}'].append(getData(index, "B")) #Lot Nums (i.e. RA numbers)
-    chamberDict[f'{sheet.title}'].append(getData(index, "L")) #Date/time in
-    chamberDict[f'{sheet.title}'].append(getData(index, "M")) #Removal date
-    chamberDict[f'{sheet.title}'].append(getData(index, "N")) #Time until removal
-    chamberDict[f'{sheet.title}'].append(getData(index, "O")) # % of time remaining
+# Gathers the lists of and puts it into the dictionary
+for index, sheet in enumerate(refSheets):
+    chamberDict[f'{sheet.title}'].append(getData(index, "B"))  # Lot Nums (i.e. RA numbers)
+    chamberDict[f'{sheet.title}'].append(getData(index, "L"))  # Date/time in
+    chamberDict[f'{sheet.title}'].append(getData(index, "M"))  # Removal date
+    # chamberDict[f'{sheet.title}'].append(getData(index, "N"))  # Time until removal
+    chamberDict[f'{sheet.title}'].append(getData(index, "O"))  # % of time remaining
 
 
-for sheet in refSheets: #converts the % of time remaining into a percentage, rounding off the first decimal place
-    (chamberDict[f'{sheet.title}'][-1]) = [ f'{(round(x * 100, 1))}%' for x in (chamberDict[f'{sheet.title}'][-1])]
+for sheet in refSheets:
+    (chamberDict[f'{sheet.title}'][-1]
+     ) = [f'{round(x * 100, 1)}%' for x in (chamberDict[f'{sheet.title}'][-1])]
 
 
-    
-#columns for the individual dataframes    
+
+
+#This works somewhat as intended, using the pandas method insert(). I can make this into a function.
+columnList = ["RA Number", "Date/Time in", "Removal Date/Time","Time Until Removal", r"% of time remaining"]
+
+#columns for the individual dataframes
 columnList = ["RA Number", "Date/Time in", "Removal Date/Time","Time Until Removal", r"% of time remaining"]
 
 
@@ -121,12 +130,12 @@ def makeDataFrame(chamberSelection):
     df['RA Number'] = pd.Series(chamberDict[f'{chamberSelection}'][0])
     df['Date/Time in'] = pd.Series(chamberDict[f'{chamberSelection}'][1])
     df['Removal Date/Time'] = pd.Series(chamberDict[f'{chamberSelection}'][2])
-    df['Time Until Removal'] = pd.Series(chamberDict[f'{chamberSelection}'][3])
-    df[r'% remaining'] = pd.Series(chamberDict[f'{chamberSelection}'][4])
+    # df['Time Until Removal'] = pd.Series(chamberDict[f'{chamberSelection}'][3])
+    df[r'% remaining'] = pd.Series(chamberDict[f'{chamberSelection}'][3])
     return(df)
 
 
-# Each chambers' dataframe. Maybe there is a more elegant way to do this, for now it works. 
+# Each chambers' dataframe. Maybe there is a more elegant way to do this, for now it works.
 
 bake125CDF = makeDataFrame('125C Bake')
 bake150CDF = makeDataFrame('150C Bake')
@@ -143,16 +152,33 @@ TC3DF = makeDataFrame('TC.3_D')
 TC4DF = makeDataFrame('TC.4_D')
 
 # A list of all the dataframes
-dfList = [bake125CDF, bake150CDF, bake180CDF, 
+dfList = [bake125CDF, bake150CDF, bake180CDF,
           bake210CDF, soak3060DF, soak6060DF,
           coldOven8DF, uHast1DF, uHast2DF,
           uHast5DF, TC2DF, TC3DF, TC4DF]
 
+#Lot Progress
+lotProgress = activeSheet['F3']
+lotProgress.value = "Lot Progress"
+lotProgress.fill = darkRedColor
+lotProgress.font = Font(color="FDFEFE")
+lotProgressRefs = [f"F{i}" for i in range(4, 18)]
 
-wb.save(r"C:\Users\VD102541\Desktop\DashboardTest.xlsx")
 
-#I've got solid individual data frames for each chamber. 
-#Still left to do is
-        # Figure out how to enter each dataframe into a corresponding row/column in the dashboard sheet.
-        # Paste this code into the main updater, add something like a "view dashboard" option in the opening screen. You'll
-        # be able to pick which chamber you want to view the dataframe of, or view all df's at the same time. 
+def dftoExcel(dfListIndex):
+    emptyList = []
+    dfTitle = refSheets[dfListIndex].title
+    activeSheet.append([dfTitle])
+    for r in dataframe_to_rows(dfList[dfListIndex],index=False):
+        activeSheet.append(r)
+    activeSheet.append(emptyList)
+for index, sheet in enumerate(dfList):
+    dftoExcel(index)
+
+
+
+
+wb.save(r"C:\Users\valex\Desktop\DashboardTest.xlsx")
+
+
+
