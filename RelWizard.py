@@ -144,6 +144,88 @@ class updateSpreadSheet:
 
 
 
+masterChamberDataFrame = defaultdict(list)
+
+def getData(sheetIndex, columnIndex):
+    """Takes the integer index of the sheet (from the list refSheets) as the first argument,
+    the column index (as a letter) for the second argument"""
+
+    dataList = list()
+    for row in range(3, refSheets[sheetIndex].max_row):
+        for column in columnIndex:
+            cellname = f'{column}{row}'
+            cellValue = refSheets[sheetIndex][f'{cellname}'].value
+            if cellValue is not None:
+                dataList.append((cellValue))
+    return(dataList)
+
+
+# Establishes chambers (i.e. titles of the worksheets) as dictionary keys
+for sheet in refSheets:
+    masterChamberDataFrame[f'{sheet.title}']
+
+# Gathers the lists of and puts it into the dictionary
+for index, sheet in enumerate(refSheets):
+    masterChamberDataFrame[f'{sheet.title}'].append(getData(index, "B"))  # Lot Nums (i.e. RA numbers)
+    masterChamberDataFrame[f'{sheet.title}'].append(getData(index, "L"))  # Date/time in
+    masterChamberDataFrame[f'{sheet.title}'].append(getData(index, "M"))  # Removal date
+    # dashboardViewer.masterChamberDataFrame[f'{sheet.title}'].append(index, "N"))  # Time until removal
+    masterChamberDataFrame[f'{sheet.title}'].append(getData(index, "O"))  # % of time remaining
+
+# I have no idea why I can't round the x value to the nearest tenth. I keep getting an error saying that the round() function doesn't support strings
+# I don't know why that item in the dashboardViewer.masterChamberDataFrame is a string. I don't get this error in the dashboardSheet.py file. The code is directly copied.
+# I'm going to leave it in for now until later.
+for sheet in refSheets:
+    (masterChamberDataFrame[f'{sheet.title}'][-1]) = [(f'{(x  * 100)} %') for x in (masterChamberDataFrame[f'{sheet.title}'][-1])]
+
+#columns for the individual dataframes
+columnList = ["RA Number", "Date/Time in", "Removal Date/Time",
+            "Time Until Removal", r"% of time remaining"]
+
+
+def makeDataFrame(chamberSelection):
+    """Makes a data frame for each chamber"""
+    df = pd.DataFrame()
+    df['RA Number'] = pd.Series(masterChamberDataFrame[f'{chamberSelection}'][0], dtype=str)
+    df['Date/Time in'] = pd.Series(masterChamberDataFrame[f'{chamberSelection}'][1], dtype=str)
+    df['Removal Date/Time'] = pd.Series(masterChamberDataFrame[f'{chamberSelection}'][2], dtype=str)
+    # df['Time Until Removal'] = pd.Series(masterChamberDataFrame[f'{chamberSelection}'][3])
+    df[r'% remaining'] = pd.Series(masterChamberDataFrame[f'{chamberSelection}'][3], dtype=str)
+
+    return(df)
+
+
+# Each chambers' dataframe. Maybe there is a more elegant way to do this, for now it works.
+
+bake125CDF = makeDataFrame('125C Bake')
+bake150CDF = makeDataFrame('150C Bake')
+bake180CDF = makeDataFrame('180C Bake')
+bake210CDF = makeDataFrame('210C Bake')
+soak3060DF = makeDataFrame('30.60 Soak')
+soak6060DF = makeDataFrame('85.85 Soak')
+coldOven8DF = makeDataFrame('Oven 8 COLD')
+uHast1DF = makeDataFrame('UHAST 1')
+uHast2DF = makeDataFrame('UHAST 2')
+uHast5DF = makeDataFrame('UHAST 5')
+TC2DF = makeDataFrame('TC.2_D')
+TC3DF = makeDataFrame('TC.3_D')
+TC4DF = makeDataFrame('TC.4_D')
+
+# A list of all the dataframes
+dfList = {'125C Bake': bake125CDF,
+        '1250C Bake': bake150CDF,
+        '180C Bake': bake180CDF,
+        '210C Bake': bake210CDF,
+        '30.60 Soak': soak3060DF,
+        '60.60 Soak': soak6060DF,
+        'Oven 8 COLD': coldOven8DF,
+        'UHAST 1': uHast1DF,
+        'UHAST 2': uHast2DF,
+        'UHAST 5': uHast5DF,
+        'TC.2_D': TC2DF,
+        'TC.3_D': TC3DF,
+        'TC.4_D': TC4DF}
+
 class confirmUpdateSpreadsheet:
 
     def confirmUpdate():
@@ -168,9 +250,8 @@ class confirmUpdateSpreadsheet:
                 print("Bruh")
                 sys.exit()
 
-class OpeningScreen:
+    def openingScreen():
 
-    def opening():
         while True:
             openingScreen = input("""
                 #############################################################
@@ -187,7 +268,12 @@ class OpeningScreen:
             if openingScreen == 'u':
                 break
             elif openingScreen == 'b':
-                dashboardChoice = q.checkbox("Choose which chamber dashboard you want to view", choices=OpeningScreen.dfList).ask()
+                dashboardChoice = q.checkbox("Choose which chamber dashboard you want to view", choices=dfList).ask()
+                for choice in dashboardChoice:
+                    if choice in dfList.keys():
+                        print(choice)
+                        print(dfList[f'{choice}'])
+                sys.exit()
             elif openingScreen == 'd':
                 startDate = input("Enter your start date (YYYY-MM-DD) or enter 't' to use today's date: ")
                 if startDate == 't':
@@ -210,97 +296,7 @@ class OpeningScreen:
                 print("Invalid input. Try Again")
 
 
-    def createDataFrames(*args):
-        """This function is a snippet of code copied from the dashboardsheet.py spreadsheet generator.
-            It serves to initialize the dataframes which will be viewed by the user from the opening screen
-            of the RelWizard"""
 
-        def __init__(self, chamberDict, dfList):
-            self.chamberDict = chamberDict
-            self.dfList = dfList
-
-        def getData(sheetIndex, columnIndex):
-            """Takes the integer index of the sheet (from the list refSheets) as the first argument,
-            the column index (as a letter) for the second argument"""
-
-            dataList = list()
-            for row in range(3, refSheets[sheetIndex].max_row):
-                for column in columnIndex:
-                    cellname = f'{column}{row}'
-                    cellValue = refSheets[sheetIndex][f'{cellname}'].value
-                    if cellValue is not None:
-                        dataList.append((cellValue))
-            return(dataList)
-
-
-        # initiates the dictionary which will hold all of our dynamic dashboard data. The keys
-        #are chambers, the values will be lists containing data from columns B(lot number),
-        #M(removal date/time), N(time until removal) and O(percentage time remaining)
-        chamberDict = defaultdict(list)
-
-        # Establishes chambers (i.e. titles of the worksheets) as dictionary keys
-        for sheet in refSheets:
-            chamberDict[f'{sheet.title}']
-
-        # Gathers the lists of and puts it into the dictionary
-        for index, sheet in enumerate(refSheets):
-            chamberDict[f'{sheet.title}'].append(getData(index, "B"))  # Lot Nums (i.e. RA numbers)
-            chamberDict[f'{sheet.title}'].append(getData(index, "L"))  # Date/time in
-            chamberDict[f'{sheet.title}'].append(getData(index, "M"))  # Removal date
-            # chamberDict[f'{sheet.title}'].append(getData(index, "N"))  # Time until removal
-            chamberDict[f'{sheet.title}'].append(getData(index, "O"))  # % of time remaining
-
-        # I have no idea why I can't round the x value to the nearest tenth. I keep getting an error saying that the round() function doesn't support strings
-        # I don't know why that item in the chamberDict is a string. I don't get this error in the dashboardSheet.py file. The code is directly copied.
-        # I'm going to leave it in for now until later.
-        for sheet in refSheets:
-            (chamberDict[f'{sheet.title}'][-1]) = [(f'{(x  * 100)} %') for x in (chamberDict[f'{sheet.title}'][-1])]
-
-        #columns for the individual dataframes
-        columnList = ["RA Number", "Date/Time in", "Removal Date/Time",
-                    "Time Until Removal", r"% of time remaining"]
-
-
-        def makeDataFrame(chamberSelection):
-            """Makes a data frame for each chamber"""
-            df = pd.DataFrame()
-            df['RA Number'] = pd.Series(chamberDict[f'{chamberSelection}'][0], dtype=str)
-            df['Date/Time in'] = pd.Series(chamberDict[f'{chamberSelection}'][1], dtype=str)
-            df['Removal Date/Time'] = pd.Series(chamberDict[f'{chamberSelection}'][2], dtype=str)
-            # df['Time Until Removal'] = pd.Series(chamberDict[f'{chamberSelection}'][3])
-            df[r'% remaining'] = pd.Series(chamberDict[f'{chamberSelection}'][3], dtype=str)
-            return(df)
-
-
-        # Each chambers' dataframe. Maybe there is a more elegant way to do this, for now it works.
-
-        bake125CDF = OpeningScreen.createDataFrames(makeDataFrame('125C Bake'))
-        bake150CDF = OpeningScreen.createDataFrames(makeDataFrame('150C Bake'))
-        bake180CDF = OpeningScreen.createDataFrames(makeDataFrame('180C Bake'))
-        bake210CDF = OpeningScreen.createDataFrames(makeDataFrame('210C Bake'))
-        soak3060DF = OpeningScreen.createDataFrames(makeDataFrame('30.60 Soak'))
-        soak6060DF = OpeningScreen.createDataFrames(makeDataFrame('85.85 Soak'))
-        coldOven8DF = OpeningScreen.createDataFrames(makeDataFrame('Oven 8 COLD'))
-        uHast1DF = OpeningScreen.createDataFrames(makeDataFrame('UHAST 1'))
-        uHast2DF = OpeningScreen.createDataFrames(makeDataFrame('UHAST 2'))
-        uHast5DF = OpeningScreen.createDataFrames(makeDataFrame('UHAST 5'))
-        TC2DF = OpeningScreen.createDataFrames(makeDataFrame('TC.2_D'))
-        TC3DF = OpeningScreen.createDataFrames(makeDataFrame('TC.3_D'))
-        TC4DF = OpeningScreen.createDataFrames(makeDataFrame('TC.4_D'))
-
-        # A list of all the dataframes
-        dfList = [bake125CDF, bake150CDF, bake180CDF,
-                bake210CDF, soak3060DF, soak6060DF,
-                coldOven8DF, uHast1DF, uHast2DF,
-                uHast5DF, TC2DF, TC3DF, TC4DF]
-        return(dfList)
-
-# OpeningScreen.opening()
-OpeningScreen.createDataFrames()
-OpeningScreen.createDataFrames(makeDataFrame())
-OpeningScreen.opening()
-
-
-# GetDataFromUser.doAllFunctions()
-# updateSpreadSheet.pickChamber()
-# confirmUpdateSpreadsheet.confirmUpdate()
+confirmUpdateSpreadsheet.openingScreen()
+GetDataFromUser.doAllFunctions()
+confirmUpdateSpreadsheet.confirmUpdate()
