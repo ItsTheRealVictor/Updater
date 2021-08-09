@@ -15,7 +15,9 @@ sheetsList=wb.sheetnames # a list of the sheet names
 chambersOnlySheetsList=sheetsList[0:14]
 refSheets = wb.worksheets
 
-
+# There is an issue where the opening screen dashboard is not showing up to date info based on the user's recent inputs. I suspect the reason may be related to these 
+# initial variable declarations. The variable "sheetsList" is referring to the names of the sheets only, it is a list of strings. "refSheets" is a list of worksheet objects.
+# Functions need to be pointing to the reference sheet (VictorChamberUsageDummyData) to pull data from, instead of sheetsList. 
 
 class GetDataFromUser:
 
@@ -251,7 +253,9 @@ class confirmUpdateSpreadsheet:
                 sys.exit()
 
     def openingScreen():
-
+            # The opening screen needs work too. The user must have the option to access any part of the RelWizard after using the date calculator or the dashboard viewer.
+            # I need to organizze the conditional statements in a way that makes sense for the user. For example, after viewing the dashboard, the user should be able to enter
+            # the updater. After using the updater, the user should be able to either view the dashboard or use the date calculator. 
         while True:
             openingScreen = input("""
                 #############################################################
