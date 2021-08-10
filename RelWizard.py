@@ -1,4 +1,4 @@
-from dashboardSheet import makeDataFrame
+from re import U
 import openpyxl as opx
 import pprint
 import datetime
@@ -9,7 +9,7 @@ import questionary as q
 import pandas as pd
 from collections import defaultdict
 
-wb = opx.load_workbook(r"C:\Users\valex\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True)
+wb = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True)
 # # List of sheets
 sheetsList=wb.sheetnames # a list of the sheet names
 chambersOnlySheetsList=sheetsList[0:14]
@@ -29,8 +29,8 @@ class GetDataFromUser:
     def getVariables():
         userLotNumber = input('Enter the Lot number: ')
         userPartNumber = input('Enter the part number: ')
-        userNumOfLots = input('Enter the number of lots: ')
-        userQuantity = input('Enter the quantity: ')
+        userNumOfLots = int(input('Enter the number of lots: '))
+        userQuantity = int(input('Enter the quantity: '))
         userStartTime = input('Enter the starting time (HH:MM): ')
         userLotOwner = input('Enter the owner: ')
         userDateInput = input("Enter your start date(YYYY-MM-DD) or enter 't' to use today's date: ")
@@ -215,7 +215,7 @@ TC4DF = makeDataFrame('TC.4_D')
 
 # A list of all the dataframes
 dfList = {'125C Bake': bake125CDF,
-        '1250C Bake': bake150CDF,
+        '150C Bake': bake150CDF,
         '180C Bake': bake180CDF,
         '210C Bake': bake210CDF,
         '30.60 Soak': soak3060DF,
@@ -231,23 +231,46 @@ dfList = {'125C Bake': bake125CDF,
 class confirmUpdateSpreadsheet:
 
     def confirmUpdate():
-        CHOICES = ['Update my spreadsheet and quit', 'Update my spreadsheet and add more parts', 'Quit']
+        CHOICES = ['Update my spreadsheet and quit', 'Update my spreadsheet and add more parts', 'Update my spreadsheet and go back to opening screen', 'Quit']
         while True:
+
             confirm = q.select("What would you like to do now?", choices = CHOICES).ask()
+
             if confirm == 'Update my spreadsheet and quit':
-                wb.save(r"C:\Users\valex\Desktop\VictorChamberUsageDummyData.xlsx")
+                wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                 sys.exit()
+
             elif confirm == 'Update my spreadsheet and add more parts':
-                wb.save(r"C:\Users\valex\Desktop\VictorChamberUsageDummyData.xlsx")
+                wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                 GetDataFromUser.dataList.clear()
                 GetDataFromUser.doAllFunctions()
                 updateSpreadSheet.pickChamber()
-                keepGoing = q.select("Do you want to keep going?", choices = ['Yes, keep going', 'Quit']).ask()
-                if keepGoing == 'Yes, keep going':
-                    wb.save(r"C:\Users\valex\Desktop\VictorChamberUsageDummyData.xlsx")
+
+                keepGoing = q.select("What do you want to do now?", choices = CHOICES).ask()
+
+                if keepGoing == 'Update my spreadsheet and quit':
+                    wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                    GetDataFromUser.dataList.clear()
+                    GetDataFromUser.doAllFunctions()
+                    updateSpreadSheet.pickChamber()
+
                 elif keepGoing == 'Quit':
-                    wb.save(r"C:\Users\valex\Desktop\VictorChamberUsageDummyData.xlsx")
+                    wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                     sys.exit()
+
+                elif keepGoing == 'Save and go back to opening screen':
+                    wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                    GetDataFromUser.dataList.clear()
+                    confirmUpdateSpreadsheet.openingScreen()
+                    # GetDataFromUser.doAllFunctions()
+                    # updateSpreadSheet.pickChamber()
+
+            elif confirm == 'Update my spreadsheet and go back to opening screen':
+                wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                GetDataFromUser.dataList.clear()
+                confirmUpdateSpreadsheet.openingScreen()
+                GetDataFromUser.doAllFunctions()
+                    
             elif confirm == 'Quit':
                 print("Bruh")
                 sys.exit()
@@ -303,4 +326,5 @@ class confirmUpdateSpreadsheet:
 
 confirmUpdateSpreadsheet.openingScreen()
 GetDataFromUser.doAllFunctions()
+updateSpreadSheet.pickChamber()
 confirmUpdateSpreadsheet.confirmUpdate()
