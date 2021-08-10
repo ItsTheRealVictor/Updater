@@ -9,15 +9,13 @@ import questionary as q
 import pandas as pd
 from collections import defaultdict
 
-wb = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True)
+wb = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True) #New issue with data_only=True, it is overwriting all the worksheet formulas. 
+                                                                                                      #May need to refer to 2 versions of wb, one with data_only=True and the other
+                                                                                                      #With data_only=False
 # # List of sheets
 sheetsList=wb.sheetnames # a list of the sheet names
 chambersOnlySheetsList=sheetsList[0:14]
 refSheets = wb.worksheets
-
-# There is an issue where the opening screen dashboard is not showing up to date info based on the user's recent inputs. I suspect the reason may be related to these 
-# initial variable declarations. The variable "sheetsList" is referring to the names of the sheets only, it is a list of strings. "refSheets" is a list of worksheet objects.
-# Functions need to be pointing to the reference sheet (VictorChamberUsageDummyData) to pull data from, instead of sheetsList. 
 
 class GetDataFromUser:
 
