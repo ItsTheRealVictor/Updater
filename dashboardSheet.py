@@ -9,8 +9,9 @@ import pandas as pd
 
 wb = opx.Workbook()
 # reference workbook, where data is pulled
-refWB = opx.load_workbook(
-    r"C:\Users\valex\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True)
+refWB = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True) #target workbook
+refDash = refWB['Dashboard'] # reads the dashboard worksheet from the target wb
+
 # indices of the various chamber-specific sheets
 refSheets = refWB.worksheets[0:14]
 activeSheet = wb.active
@@ -72,8 +73,13 @@ for index, cell in enumerate(chamberCellRefs):
     activeSheet[f'{cell}'].alignment = Alignment(wrap_text=True)
 
 #First Progress Chart - num of lots, total num of units for each chamber
-lots125CBake = refWB['Dashboard']['C3'].value
-activeSheet['C4'].value = lots125CBake
+for i in range(0,14): #total number of units
+    insertion = refWB['Dashboard']['D' + f'{i + 5}'].value
+    activeSheet['C' + f'{i + 4}'].value = insertion
+
+for i in range(0,14): #total number of lots
+    nextInsertion = refWB['Dashboard']['E' + f'{i + 5}'].value
+    activeSheet['D' + f'{i + 4}'].value = nextInsertion
 
 
 #EXPERIMENTAL CODE
@@ -157,12 +163,7 @@ dfList = [bake125CDF, bake150CDF, bake180CDF,
           coldOven8DF, uHast1DF, uHast2DF,
           uHast5DF, TC2DF, TC3DF, TC4DF]
 
-#Lot Progress
-lotProgress = activeSheet['F3']
-lotProgress.value = "Lot Progress"
-lotProgress.fill = darkRedColor
-lotProgress.font = Font(color="FDFEFE")
-lotProgressRefs = [f"F{i}" for i in range(4, 18)]
+
 
 
 def dftoExcel(dfListIndex):
@@ -178,7 +179,7 @@ for index, sheet in enumerate(dfList):
 
 
 
-wb.save(r"C:\Users\valex\Desktop\DashboardTest.xlsx")
+wb.save(r"C:\Users\VD102541\Desktop\DashboardTest.xlsx")
 
 
 
