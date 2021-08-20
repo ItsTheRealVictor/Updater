@@ -1,4 +1,3 @@
-from re import U
 import openpyxl as opx
 import pprint
 import datetime
@@ -9,11 +8,18 @@ import questionary as q
 import pandas as pd
 from collections import defaultdict
 
-wb = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True)
+readWB = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx", data_only=True) #Workbook used to read data. Does not interpret or 
+                                                                                                            #translate any formulas.
+
+writeWB = opx.load_workbook(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx", data_only=False) #Workbook used to write data to new file. Interprets 
+                                                                                                            #and leaves all formulas intact
+
 # # List of sheets
-sheetsList=wb.sheetnames # a list of the sheet names
+sheetsList=readWB.sheetnames # a list of the sheet names
 chambersOnlySheetsList=sheetsList[0:14]
-refSheets = wb.worksheets
+
+readRefSheets = readWB.worksheets
+writeRefSheets = writeWB.worksheets
 
 # There is an issue where the opening screen dashboard is not showing up to date info based on the user's recent inputs. I suspect the reason may be related to these 
 # initial variable declarations. The variable "sheetsList" is referring to the names of the sheets only, it is a list of strings. "refSheets" is a list of worksheet objects.
@@ -124,21 +130,21 @@ class updateSpreadSheet:
         insertLocation = 3
         for index, value in enumerate(chambersOnlySheetsList):
             if value == updateSpreadSheet.chamberChoice:
-                wb[sheetsList[index]].insert_rows(insertLocation)
+                writeWB[sheetsList[index]].insert_rows(insertLocation)
                 for i in range(2, 10):
-                    cellref = wb[sheetsList[index]].cell(row=3, column=i)
+                    cellref = writeWB[sheetsList[index]].cell(row=3, column=i)
                     cellref.value = inputDataList[i]
                 for j in range(12,13):
-                    progBarInsertOne = wb[sheetsList[index]].cell(row=3, column=j)
+                    progBarInsertOne = writeWB[sheetsList[index]].cell(row=3, column=j)
                     progBarInsertOne.value = progBarFormulaCombinedDateTimeIn
                 for k in range(13,14):
-                    progBarInsertTwo = wb[sheetsList[index]].cell(row=3, column=k)
+                    progBarInsertTwo = writeWB[sheetsList[index]].cell(row=3, column=k)
                     progBarInsertTwo.value = progBarFormulaCombinedDateTimeOut
                 for g in range(14,15):
-                    progBarInsertThree = wb[sheetsList[index]].cell(row=3, column=g)
+                    progBarInsertThree = writeWB[sheetsList[index]].cell(row=3, column=g)
                     progBarInsertThree.value = progBarFormulaRemainingTime
                 for l in range(15,16):
-                    progBarInsertFour = wb[sheetsList[index]].cell(row=3, column=l)
+                    progBarInsertFour = writeWB[sheetsList[index]].cell(row=3, column=l)
                     progBarInsertFour.value = progBarFormulaRemainingTimePercentage
                     progBarInsertFour.style = "Percent"
         #Need to add a function or otherwise better way (i.e. non-code repeating) progress dashboard functionality.
@@ -153,21 +159,21 @@ def getData(sheetIndex, columnIndex):
     the column index (as a letter) for the second argument"""
 
     dataList = list()
-    for row in range(3, refSheets[sheetIndex].max_row):
+    for row in range(3, readRefSheets[sheetIndex].max_row):
         for column in columnIndex:
             cellname = f'{column}{row}'
-            cellValue = refSheets[sheetIndex][f'{cellname}'].value
+            cellValue = readRefSheets[sheetIndex][f'{cellname}'].value
             if cellValue is not None:
                 dataList.append((cellValue))
     return(dataList)
 
 
 # Establishes chambers (i.e. titles of the worksheets) as dictionary keys
-for sheet in refSheets:
+for sheet in readRefSheets:
     masterChamberDataFrame[f'{sheet.title}']
 
 # Gathers the lists of and puts it into the dictionary
-for index, sheet in enumerate(refSheets):
+for index, sheet in enumerate(readRefSheets):
     masterChamberDataFrame[f'{sheet.title}'].append(getData(index, "B"))  # Lot Nums (i.e. RA numbers)
     masterChamberDataFrame[f'{sheet.title}'].append(getData(index, "L"))  # Date/time in
     masterChamberDataFrame[f'{sheet.title}'].append(getData(index, "M"))  # Removal date
@@ -177,7 +183,7 @@ for index, sheet in enumerate(refSheets):
 # I have no idea why I can't round the x value to the nearest tenth. I keep getting an error saying that the round() function doesn't support strings
 # I don't know why that item in the dashboardViewer.masterChamberDataFrame is a string. I don't get this error in the dashboardSheet.py file. The code is directly copied.
 # I'm going to leave it in for now until later.
-for sheet in refSheets:
+for sheet in readRefSheets:
     (masterChamberDataFrame[f'{sheet.title}'][-1]) = [(f'{(x  * 100)} %') for x in (masterChamberDataFrame[f'{sheet.title}'][-1])]
 
 #columns for the individual dataframes
@@ -237,11 +243,11 @@ class confirmUpdateSpreadsheet:
             confirm = q.select("What would you like to do now?", choices = CHOICES).ask()
 
             if confirm == 'Update my spreadsheet and quit':
-                wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                writeWB.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                 sys.exit()
 
             elif confirm == 'Update my spreadsheet and add more parts':
-                wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                writeWB.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                 GetDataFromUser.dataList.clear()
                 GetDataFromUser.doAllFunctions()
                 updateSpreadSheet.pickChamber()
@@ -249,24 +255,24 @@ class confirmUpdateSpreadsheet:
                 keepGoing = q.select("What do you want to do now?", choices = CHOICES).ask()
 
                 if keepGoing == 'Update my spreadsheet and quit':
-                    wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                    writeWB.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                     GetDataFromUser.dataList.clear()
                     GetDataFromUser.doAllFunctions()
                     updateSpreadSheet.pickChamber()
 
                 elif keepGoing == 'Quit':
-                    wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                    writeWB.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                     sys.exit()
 
                 elif keepGoing == 'Save and go back to opening screen':
-                    wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                    writeWB.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                     GetDataFromUser.dataList.clear()
                     confirmUpdateSpreadsheet.openingScreen()
                     # GetDataFromUser.doAllFunctions()
                     # updateSpreadSheet.pickChamber()
 
             elif confirm == 'Update my spreadsheet and go back to opening screen':
-                wb.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
+                writeWB.save(r"C:\Users\VD102541\Desktop\VictorChamberUsageDummyData.xlsx")
                 GetDataFromUser.dataList.clear()
                 confirmUpdateSpreadsheet.openingScreen()
                 GetDataFromUser.doAllFunctions()
@@ -304,7 +310,7 @@ class confirmUpdateSpreadsheet:
             elif openingScreen == 'd':
                 startDate = input("Enter your start date (YYYY-MM-DD) or enter 't' to use today's date: ")
                 if startDate == 't':
-                        startDate = str(datetime.date.today())
+                        startDate = str(datetime.datetime.today())
                 userTime = input("Enter your time interval (in hours): ")
 
                 """Takes the date and time interval from the user and computes the future date and day. """
@@ -323,10 +329,14 @@ class confirmUpdateSpreadsheet:
                 print("Invalid input. Try Again")
 
 
-try:
-    confirmUpdateSpreadsheet.openingScreen()
-    GetDataFromUser.doAllFunctions()
-    updateSpreadSheet.pickChamber()
-    confirmUpdateSpreadsheet.confirmUpdate()
-except PermissionError:
-    print("Spreadsheet is still open. Close spreadsheet before continuing")
+def permissionLoop():
+    while True:
+        try:
+            confirmUpdateSpreadsheet.openingScreen()
+            GetDataFromUser.doAllFunctions()
+            updateSpreadSheet.pickChamber()
+            confirmUpdateSpreadsheet.confirmUpdate()
+        except PermissionError:
+            print("Spreadsheet is still open. Close spreadsheet before continuing")
+            confirmUpdateSpreadsheet.confirmUpdate()
+permissionLoop()
